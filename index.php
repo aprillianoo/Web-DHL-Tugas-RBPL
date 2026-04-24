@@ -6,7 +6,6 @@ if (isset($_POST['login'])) {
     $u = $_POST['username'];
     $p = $_POST['password'];
     
-    // Debug: cek koneksi database
     if ($conn->connect_error) {
         $error = "Database connection failed: " . $conn->connect_error;
     } else {
