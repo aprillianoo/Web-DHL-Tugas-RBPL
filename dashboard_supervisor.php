@@ -4,17 +4,14 @@ cekLogin();
 $user = $_SESSION['user'];
 $tgl_hari_ini = date('Y-m-d');
 
-// --- LOGIKA KONFIRMASI IZIN ---
 if (isset($_POST['konfirmasi_izin'])) {
     $izin_id = $_POST['izin_id'];
     $status = $_POST['status'];
     updateIzinStatus($conn, $izin_id, $status);
-    // Refresh halaman
     header("Location: dashboard_supervisor.php");
     exit();
 }
 
-// --- LOGIKA SIMPAN SHIFT ---
 if (isset($_POST['simpan_shift'])) {
     if (!isset($_POST['staff_id']) || empty($_POST['staff_id'])) {
         $error = "Pilih staff terlebih dahulu.";
@@ -27,7 +24,6 @@ if (isset($_POST['simpan_shift'])) {
         $tipe = $_POST['tipe'];
         
         if (insertShift($conn, $supervisor_id, $staff_id, $tgl_shift, $jam_mulai, $jam_selesai, $tipe)) {
-            // Refresh agar form bersih
             header("Location: dashboard_supervisor.php");
             exit();
         } else {
@@ -36,22 +32,18 @@ if (isset($_POST['simpan_shift'])) {
     }
 }
 
-// --- AMBIL DATA ABSENSI HARI INI ---
 $absen_staff = isset($_SESSION['data_absensi'][$tgl_hari_ini]) ? $_SESSION['data_absensi'][$tgl_hari_ini] : [];
 $jml_hadir = count($absen_staff);
-$jml_izin = 0; // Data dummy untuk visual
-$jml_cuti = 0; // Data dummy untuk visual
-$jml_alpa = 0; // Data dummy untuk visual
+$jml_izin = 0; 
+$jml_cuti = 0;
+$jml_alpa = 0; 
 
-// Ambil daftar staff untuk dropdown
 $result = $conn->query("SELECT id, nama FROM users WHERE role = 'staff'");
 $list_staff = $result->fetch_all(MYSQLI_ASSOC);
 
-// Ambil data shift dari database
 $result = $conn->query("SELECT s.*, u.nama as nama_staff FROM shift s JOIN users u ON s.staff_id = u.id ORDER BY s.tgl_shift DESC, s.jam_mulai ASC");
 $data_shifts = $result->fetch_all(MYSQLI_ASSOC);
 
-// Ambil data izin yang menunggu konfirmasi
 $result = $conn->query("SELECT i.*, u.nama FROM izin i JOIN users u ON i.user_id = u.id WHERE i.status = 'Menunggu' ORDER BY i.tanggal_mulai DESC");
 $list_izin_menunggu = $result->fetch_all(MYSQLI_ASSOC);
 ?>
@@ -61,7 +53,6 @@ $list_izin_menunggu = $result->fetch_all(MYSQLI_ASSOC);
     <title>DHL Warehouse - Dashboard Supervisor</title>
     <?php echo getHeaderStyles(); ?>
     <style>
-        /* Tambahan style khusus Supervisor dari file asli Anda */
         .btn-new-shift { width: 100%; background: var(--dhl-red); color: white; border: none; border-radius: var(--radius); padding: 14px; font-size: 15px; font-weight: 700; font-family: var(--font); cursor: pointer; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: var(--shadow-md); transition: opacity 0.2s; }
         .form-card { background: white; border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow); }
         .form-title { font-size: 15px; font-weight: 700; color: var(--gray-900); margin-bottom: 14px; }
@@ -280,12 +271,10 @@ $list_izin_menunggu = $result->fetch_all(MYSQLI_ASSOC);
 
     <script>
         function sTab(tab) {
-            // Sembunyikan semua konten tab
             document.getElementById('s-shift').style.display = (tab === 'shift') ? 'block' : 'none';
             document.getElementById('s-rekap').style.display = (tab === 'rekap') ? 'block' : 'none';
             document.getElementById('s-izin').style.display = (tab === 'izin') ? 'block' : 'none';
             
-            // Atur warna tombol tab
             const btnShift = document.getElementById('s-tab-shift');
             const btnRekap = document.getElementById('s-tab-rekap');
             const btnIzin = document.getElementById('s-tab-izin');
