@@ -1,7 +1,5 @@
 <?php
 session_start();
-
-// Database Configuration - INFINITYFREE
 $host = 'sql203.infinityfree.com';
 $dbname = 'if0_41736764_dhl';
 $username = 'if0_41736764';
@@ -15,10 +13,8 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Set charset
 $conn->set_charset("utf8");
 
-// Function to get user by username
 function getUserByUsername($conn, $username) {
     $stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
     $stmt->bind_param("s", $username);
@@ -89,7 +85,6 @@ function cekLogin() {
     }
 }
 
-// Ini adalah CSS ASLI dari file HTML Anda
 function getHeaderStyles() {
     return "
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
