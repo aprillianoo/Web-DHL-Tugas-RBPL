@@ -4,7 +4,6 @@ cekLogin();
 $user = $_SESSION['user'];
 $tgl_hari_ini = date('Y-m-d');
 
-// --- LOGIKA TAMBAH STAFF ---
 if (isset($_POST['tambah_staff'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
@@ -12,7 +11,7 @@ if (isset($_POST['tambah_staff'])) {
     $jabatan = $_POST['jabatan'];
     $email = $_POST['email'];
     
-    // Cek username unik
+    // Cek username
     $stmt = $conn->prepare("SELECT id FROM users WHERE username = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
@@ -33,7 +32,6 @@ if (isset($_POST['tambah_staff'])) {
     }
 }
 
-// --- LOGIKA EDIT STAFF ---
 if (isset($_POST['edit_staff'])) {
     $staff_id = $_POST['staff_id'];
     $username = $_POST['username'];
@@ -42,7 +40,6 @@ if (isset($_POST['edit_staff'])) {
     $jabatan = $_POST['jabatan'];
     $email = $_POST['email'];
     
-    // Cek username unik kecuali untuk staff ini sendiri
     $stmt = $conn->prepare("SELECT id FROM users WHERE username = ? AND id != ?");
     $stmt->bind_param("si", $username, $staff_id);
     $stmt->execute();
@@ -58,7 +55,6 @@ if (isset($_POST['edit_staff'])) {
         }
         if ($stmt->execute()) {
             $pesan = "Staff berhasil diupdate.";
-            // Refresh list staff
             $result = $conn->query("SELECT * FROM users WHERE role = 'staff'");
             $list_staff = $result->fetch_all(MYSQLI_ASSOC);
             $total_staff = count($list_staff);
@@ -68,27 +64,22 @@ if (isset($_POST['edit_staff'])) {
     }
 }
 
-// 1. Ambil daftar staff dari database
 $result = $conn->query("SELECT * FROM users WHERE role = 'staff'");
 $list_staff = $result->fetch_all(MYSQLI_ASSOC);
 $total_staff = count($list_staff);
 
-// 2. Ambil data absensi hari ini dari database
 $result = $conn->query("SELECT COUNT(*) as hadir FROM absensi WHERE tanggal = '$tgl_hari_ini'");
 $jumlah_hadir = $result->fetch_assoc()['hadir'];
 $jumlah_tidak_hadir = $total_staff - $jumlah_hadir;
 
-// Ambil detail absensi hari ini
 $result = $conn->query("SELECT u.nama, a.waktu_masuk, a.waktu_keluar FROM absensi a JOIN users u ON a.user_id = u.id WHERE a.tanggal = '$tgl_hari_ini'");
 $data_hari_ini = $result->fetch_all(MYSQLI_ASSOC);
 
-// Ambil data shift hari ini
 $result = $conn->query("SELECT COUNT(*) as total_shift FROM shift WHERE tgl_shift = '$tgl_hari_ini'");
 $jumlah_shift = $result->fetch_assoc()['total_shift'];
 $result = $conn->query("SELECT COUNT(DISTINCT staff_id) as staff_scheduled FROM shift WHERE tgl_shift = '$tgl_hari_ini'");
 $staff_scheduled = $result->fetch_assoc()['staff_scheduled'];
 
-// Ambil daftar shift untuk jadwal manager
 $result = $conn->query("SELECT s.*, u.nama as nama_staff FROM shift s JOIN users u ON s.staff_id = u.id ORDER BY s.tgl_shift DESC, s.jam_mulai ASC");
 $data_shifts = $result->fetch_all(MYSQLI_ASSOC);
 ?>
@@ -342,23 +333,19 @@ $data_shifts = $result->fetch_all(MYSQLI_ASSOC);
       
     <script>
         function mTab(tab) {
-            // Sembunyikan semua konten tab
             document.getElementById('m-ringkasan').style.display = (tab === 'ringkasan') ? 'block' : 'none';
             document.getElementById('m-staff').style.display = (tab === 'staff') ? 'block' : 'none';
             document.getElementById('m-jadwal').style.display = (tab === 'jadwal') ? 'block' : 'none';
             
-            // Ambil elemen tombol tab
             const btnRingkasan = document.getElementById('m-tab-ringkasan');
             const btnStaff = document.getElementById('m-tab-staff');
             const btnJadwal = document.getElementById('m-tab-jadwal');
             
-            // Reset semua tombol menjadi transparan/abu-abu
             [btnRingkasan, btnStaff, btnJadwal].forEach(btn => {
                 btn.style.background = 'transparent';
                 btn.style.color = 'var(--gray-500)';
             });
             
-            // Set tombol yang diklik menjadi aktif (merah)
             const activeBtn = document.getElementById('m-tab-' + tab);
             activeBtn.style.background = 'var(--dhl-red)';
             activeBtn.style.color = 'white';
