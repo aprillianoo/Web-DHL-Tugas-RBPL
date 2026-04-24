@@ -8,7 +8,6 @@ $user = $_SESSION['user'];
 $username = $user['username'];
 $tgl = date('Y-m-d');
 
-// Debug: cek koneksi dan user
 if ($conn->connect_error) {
     die("Database connection failed: " . $conn->connect_error);
 }
@@ -16,9 +15,7 @@ if (!$user) {
     die("User session not found");
 }
 
-// Handle AJAX untuk notifikasi
 if (isset($_GET['ajax']) && $_GET['ajax'] == 'notif') {
-    // Ambil notifikasi terbaru
     $notifikasi = [];
     $stmt = $conn->prepare("SELECT 'shift' as tipe, CONCAT('Shift hari ini: ', jam_mulai, ' - ', jam_selesai, ' (', tipe, ')') as pesan, tgl_shift as tanggal FROM shift WHERE staff_id = ? AND tgl_shift = ?");
     $stmt->bind_param("is", $user['id'], $tgl);
@@ -49,7 +46,6 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == 'notif') {
     exit;
 }
 
-// --- LOGIKA ABSENSI ---
 if (isset($_POST['absen_masuk'])) {
     $waktu_masuk = date('H:i:s');
     insertAbsensi($conn, $user['id'], $tgl, $waktu_masuk, 'Hadir');
@@ -61,7 +57,6 @@ if (isset($_POST['absen_keluar'])) {
     $pesan_absen = "Absensi keluar berhasil pada " . date('H:i');
 }
 
-// --- LOGIKA IZIN ---
 if (isset($_POST['kirim_izin'])) {
     insertIzin($conn, $user['id'], $_POST['jenis'], $_POST['mulai'], $_POST['selesai'], $_POST['alasan']);
     $pesan_izin = "Pengajuan izin berhasil dikirim";
@@ -69,11 +64,9 @@ if (isset($_POST['kirim_izin'])) {
 
 $absen = getAbsensi($conn, $user['id'], $tgl);
 
-// Ambil shift hari ini dan besok
 $result = $conn->query("SELECT * FROM shift WHERE staff_id = {$user['id']} AND tgl_shift IN ('$tgl', '" . date('Y-m-d', strtotime('+1 day')) . "') ORDER BY tgl_shift ASC");
 $shifts_staff = $result->fetch_all(MYSQLI_ASSOC);
 
-// Ambil notifikasi: shift hari ini, izin yang sudah diputuskan
 $notifikasi = [];
 $result = $conn->query("SELECT 'shift' as tipe, CONCAT('Shift hari ini: ', jam_mulai, ' - ', jam_selesai, ' (', tipe, ')') as pesan, tgl_shift as tanggal FROM shift WHERE staff_id = {$user['id']} AND tgl_shift = '$tgl'");
 while ($row = $result->fetch_assoc()) {
@@ -98,15 +91,12 @@ while ($row = $result->fetch_assoc()) {
             });
         }
 
-        // Polling untuk notifikasi setiap 30 detik
         setInterval(function() {
             fetch('dashboard_staff.php?ajax=notif')
                 .then(response => response.text())
                 .then(data => {
                     if (data.trim() !== '') {
-                        // Update tab notif jika ada notifikasi baru
                         document.getElementById('st-notif').innerHTML = data;
-                        // Tambah badge atau alert jika di tab lain
                         if (!document.getElementById('tab-notif').classList.contains('active')) {
                             alert('Notifikasi baru!');
                         }
